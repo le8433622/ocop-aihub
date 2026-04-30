@@ -1,69 +1,102 @@
-import Link from 'next/link'
+'use client'
+
+import { useState, useEffect } from 'react'
 
 export default function ResellerDashboard() {
+  const [products, setProducts] = useState<any[]>([])
+  const [cart, setCart] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then(r => r.json())
+      .then(d => setProducts(d.products ?? []))
+  }, [])
+
+  const addToCart = (productId: string) => {
+    setCart(prev => ({ ...prev, [productId]: (prev[productId] ?? 0) + 1 }))
+  }
+
+  const getCartItems = () => {
+    return Object.entries(cart).map(([id, qty]) => {
+      const product = products.find(p => p.id === id)
+      return { ...product, quantity: qty }
+    }).filter(Boolean)
+  }
+
+  const total = getCartItems().reduce((sum, item: any) => sum + item.price * item.quantity, 0)
+
+  const submitCheckout = async () => {
+    const items = getCartItems().map((item: any) => ({
+      productId: item.id,
+      quantity: item.quantity
+    }))
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    })
+    const data = await res.json()
+    if (data.checkout) {
+      alert(`Checkout created! Order: ${data.checkout.orderId}`)
+      setCart({})
+    }
+  }
+
   return (
-    <div className="min-h-screen pt-32 pb-24 bg-zinc-50 dark:bg-zinc-950">
-      <div className="max-w-7xl mx-auto px-6">
-        <header className="flex justify-between items-end mb-16">
-          <div>
-            <h1 className="text-4xl mb-2">Reseller <span className="text-emerald-700 font-black">Studio</span></h1>
-            <p className="text-zinc-500 font-medium">Build your storefront and grow your OCOP community.</p>
+    <main className="max-w-6xl mx-auto py-16 px-4">
+      <h1 className="text-3xl font-bold text-gray-800">Reseller Dashboard</h1>
+      <p className="mt-2 text-gray-600">Browse products and create bulk orders for your storefront.</p>
+
+      <div className="mt-8 grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 space-y-4">
+          {products.slice(0, 6).map((p) => (
+            <div key={p.id} className="rounded-xl border bg-white p-4 shadow-sm flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">{p.name}</h3>
+                <p className="text-sm text-gray-500">{p.stock_quantity} in stock</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold">{p.price?.toLocaleString()}₫</p>
+                <button
+                  onClick={() => addToCart(p.id)}
+                  className="mt-2 rounded bg-indigo-600 px-3 py-1 text-xs text-white hover:bg-indigo-700"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-xl border bg-white p-6 shadow-sm">
+          <h2 className="font-semibold">Cart</h2>
+          <div className="mt-4 space-y-2">
+            {getCartItems().map((item: any) => (
+              <div key={item.id} className="flex justify-between text-sm">
+                <span>{item.name} x {item.quantity}</span>
+                <span>{(item.price * item.quantity).toLocaleString()}₫</span>
+              </div>
+            ))}
           </div>
-          <button className="btn-secondary">Visit My Storefront</button>
-        </header>
-
-        <div className="grid md:grid-cols-3 gap-12">
-          <div className="md:col-span-2 space-y-12">
-            <section className="glass p-10 rounded-[2.5rem]">
-               <h3 className="text-2xl mb-8 font-bold">Marketing <span className="text-purple-600">Assistant</span></h3>
-               <div className="p-8 rounded-3xl bg-zinc-950 border border-zinc-800 text-white">
-                  <p className="text-zinc-400 mb-6 font-mono text-sm">{`// Generate social media post for "Premium Honey"`}</p>
-                  <div className="space-y-4 mb-8">
-                     <div className="h-4 bg-zinc-800 rounded-full w-3/4 animate-pulse"></div>
-                     <div className="h-4 bg-zinc-800 rounded-full w-full animate-pulse"></div>
-                     <div className="h-4 bg-zinc-800 rounded-full w-1/2 animate-pulse"></div>
-                  </div>
-                  <button className="btn-primary w-full bg-purple-600 shadow-purple-600/20">Generate Content</button>
-               </div>
-            </section>
-
-            <section className="grid grid-cols-2 gap-8">
-               <Link href="/reseller/products" className="card-premium group hover:border-emerald-500">
-                  <h4 className="text-xl mb-2 font-bold">Select Products</h4>
-                  <p className="text-sm text-zinc-500 mb-6">Browse and add approved OCOP items to your shop.</p>
-                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 group-hover:translate-x-2 transition-transform inline-block">Explore &rarr;</span>
-               </Link>
-               <Link href="/reseller/storefront" className="card-premium group hover:border-emerald-500">
-                  <h4 className="text-xl mb-2 font-bold">Store Settings</h4>
-                  <p className="text-sm text-zinc-500 mb-6">Customize colors, logo, and your brand story.</p>
-                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 group-hover:translate-x-2 transition-transform inline-block">Settings &rarr;</span>
-               </Link>
-            </section>
-          </div>
-
-          <aside className="space-y-8">
-             <div className="glass p-8 rounded-3xl">
-                <h4 className="font-bold mb-4 uppercase text-xs tracking-widest text-zinc-400">Your Earnings</h4>
-                <div className="space-y-4">
-                   <div className="flex justify-between items-end">
-                      <span className="text-sm">Total Commissions</span>
-                      <span className="text-4xl font-black">$1,240</span>
-                   </div>
-                   <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="w-3/4 h-full bg-emerald-500"></div>
-                   </div>
-                   <p className="text-xs text-zinc-400 font-medium">Next payout: May 15, 2026</p>
-                </div>
-             </div>
-
-             <div className="glass p-8 rounded-3xl border-purple-500/10">
-                <h4 className="font-bold mb-4 text-purple-600 uppercase text-xs tracking-widest">AI Insights</h4>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">&quot;Honey and Dried Fruits are trending in your region. Consider creating a &apos;Healthy Mornings&apos; gift combo.&quot;</p>
-                <button className="text-xs font-bold uppercase tracking-widest text-purple-600 underline">Create Combo &rarr;</button>
-             </div>
-          </aside>
+          {getCartItems().length > 0 && (
+            <>
+              <div className="mt-4 border-t pt-4 flex justify-between font-semibold">
+                <span>Total</span>
+                <span>{total.toLocaleString()}₫</span>
+              </div>
+              <button
+                onClick={submitCheckout}
+                className="mt-4 w-full rounded bg-indigo-600 py-2 text-sm text-white hover:bg-indigo-700"
+              >
+                Checkout
+              </button>
+            </>
+          )}
+          {getCartItems().length === 0 && (
+            <p className="mt-4 text-sm text-gray-500">Cart is empty</p>
+          )}
         </div>
       </div>
-    </div>
+    </main>
   )
 }
