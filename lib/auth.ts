@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
+import type { NextRequest } from 'next/server'
 
-export const JWT_SECRET = process.env.JWT_SECRET || 'change-me-securely'
+export const JWT_SECRET = process.env.JWT_SECRET || 'replace_me_securely'
 
 export function generateToken(userId: string, expiresIn = '7d') {
   return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn })
@@ -14,10 +15,9 @@ export function verifyToken(token: string) {
   }
 }
 
-export function getUserIdFromRequest(req: Request): string | null {
+export function getUserIdFromRequest(req: NextRequest): string | null {
   const auth = req.headers.get('Authorization') ?? ''
-  const match = auth.match(/^Bearer\s+(.*)$/)
-  const token = match?.[1]
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : auth
   if (!token) return null
   const payload = verifyToken(token)
   return payload?.sub ?? null

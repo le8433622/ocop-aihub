@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { generateToken } from '../../../../lib/auth'
-import { Pool } from 'pg'
-require('dotenv').config()
+import { createClient } from '@supabase/supabase-js'
 
-const pool = new Pool({
-  host: '127.0.0.1',
-  port: 5432,
-  database: 'ocopdb3',
-  user: 'postgres',
-  password: '',
-})
+const supabase = createClient(
+  process.env.SUPABASE_URL || 'https://usfbpktesdbriomlrzqn.supabase.co',
+  process.env.SUPABASE_ANON_KEY || 'b093552cf73a8b3591ff73d5c8260eea41d5b6922db6559a5f902aff12adae06'
+)
 
 type Body = {
   email: string
@@ -20,17 +16,21 @@ type Body = {
 export async function POST(req: Request) {
   try {
     const body: Body = await req.json()
-    const result = await pool.query('SELECT id, email, name, password_hash FROM users WHERE email = $1', [body.email])
-    const user = result.rows[0]
-    if (!user || !user.password_hash) {
+    // Try to find user in Supabase
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email, name, password_hash')
+      .eq('email', body.email)
+      .single()
+    if (error || !data) {
       return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 })
     }
-    const ok = await bcrypt.compare(body.password, user.password_hash)
+    const ok = await bcrypt.compare(body.password, data.password_hash)
     if (!ok) {
       return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 })
     }
-    const token = generateToken(user.id)
-    return NextResponse.json({ token, user: { id: user.id, email: user.email, name: user.name } })
+    const token = generateToken(data.id)
+    return NextResponse.json({ token, user: { id: data.id, email: data.email, name: data.name } })
   } catch (e: any) {
     console.error(e)
     return new Response(JSON.stringify({ error: 'Server error', detail: e.message }), { status: 500 })

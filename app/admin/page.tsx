@@ -1,5 +1,5 @@
-import { getUserIdFromRequest } from '../../../lib/auth'
 import { Pool } from 'pg'
+import { getUserIdFromRequest } from '../../../lib/auth'
 
 const pool = new Pool({
   host: '127.0.0.1',
