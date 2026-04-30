@@ -17,6 +17,7 @@ model User {
   isActive     Boolean  @default(true)
   userRoles    UserRole[]
   auditLogs    AuditLog[]
+  supplier     Supplier?
 }
 
 model Role {
@@ -33,11 +34,43 @@ model UserRole {
   @@id([userId, roleId])
 }
 
+model Supplier {
+  id          String   @id @default(uuid())
+  name        String
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  products    Product[]
+  createdAt   DateTime @default(now())
+}
+
 model Product {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
   price       Float
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  status      String   @default("UNPAID")
+  totalAmount Float
+  items       OrderItem[]
+  createdAt   DateTime @default(now())
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
 }
 
 model AuditLog {
