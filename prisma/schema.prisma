@@ -56,6 +56,7 @@ model Product {
   description       String?
   price             Float
   imageUrl          String?     @map("image_url")
+  category          String?
   supplierId        String?     @map("supplier_id")
   supplier          Supplier?   @relation(fields: [supplierId], references: [id])
   approvalStatus    String      @default("REVIEW") @map("approval_status")

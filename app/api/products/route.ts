@@ -8,6 +8,7 @@ export async function GET(req: Request) {
   const minPrice = searchParams.get('minPrice')
   const maxPrice = searchParams.get('maxPrice')
   const stars = searchParams.get('stars')
+  const category = searchParams.get('category')
 
   let query = supabase
     .from('products')
@@ -20,6 +21,7 @@ export async function GET(req: Request) {
   if (minPrice) query = query.gte('price', Number(minPrice))
   if (maxPrice) query = query.lte('price', Number(maxPrice))
   if (stars) query = query.eq('ocop_stars', Number(stars))
+  if (category) query = query.eq('category', category)
 
   const { data, error } = await query.order('created_at', { ascending: false })
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
