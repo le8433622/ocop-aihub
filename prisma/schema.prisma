@@ -55,6 +55,7 @@ model Product {
   slug              String?     @unique
   description       String?
   price             Float
+  imageUrl          String?     @map("image_url")
   supplierId        String?     @map("supplier_id")
   supplier          Supplier?   @relation(fields: [supplierId], references: [id])
   approvalStatus    String      @default("REVIEW") @map("approval_status")
@@ -66,8 +67,21 @@ model Product {
   createdAt         DateTime    @default(now()) @map("created_at")
   updatedAt         DateTime    @updatedAt @map("updated_at")
   orderItems        OrderItem[]
+  reviews           Review[]
 
   @@map("products")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("reviews")
 }
 
 model Order {
