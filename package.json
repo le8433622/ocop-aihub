@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name init",
+    "seed": "node prisma/seed.js",
     "prepare": "husky install"
   },
   "dependencies": {
