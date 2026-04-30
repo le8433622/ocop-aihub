@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://postgres@localhost:5432/ocopdb3"
 }
 
 generator client {
@@ -15,19 +15,21 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   isActive     Boolean  @default(true)
-  // relations would be added later (roles, profiles, etc.)
+  userRoles    UserRole[]
+  auditLogs    AuditLog[]
 }
 
 model Role {
-  id   String @id @default(uuid())
-  name String @unique
+  id       String    @id @default(uuid())
+  name     String    @unique
+  userRoles UserRole[]
 }
 
 model UserRole {
   userId String
   roleId String
-  User   User @relation(fields: [userId], references: [id])
-  Role   Role @relation(fields: [roleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  role   Role   @relation(fields: [roleId], references: [id])
   @@id([userId, roleId])
 }
 
@@ -41,9 +43,9 @@ model Product {
 model AuditLog {
   id        String   @id @default(uuid())
   userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
   action    String
   model     String
   modelId   String?
   timestamp DateTime @default(now())
-  User      User?    @relation(fields: [userId], references: [id])
 }
