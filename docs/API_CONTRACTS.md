@@ -64,3 +64,30 @@
   - Query: ?status=PAID&userId=xxx
   - Output: { orders: [...] }
   - Behavior: Admin view of all orders with user, payment, and item details; supports filtering by status and userId.
+
+- GET /api/products
+  - Query: ?q=honey&minPrice=100&maxPrice=500&stars=5
+  - Output: { products: [...] }
+  - Behavior: Public search and filter products; supports search query, price range, OCOP stars filter. Returns APPROVED only.
+
+- GET /api/my/orders
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Query: ?status=PAID
+  - Output: { orders: [...] }
+  - Behavior: Customer view of their own orders with items and payment details; supports status filter.
+
+- GET /api/suppliers/me
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Output: { products: [...], orders: [...] }
+  - Behavior: Supplier dashboard - returns supplier's products and orders containing their products.
+
+- POST /api/email/notify
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Input: { to: string, subject: string, message: string }
+  - Output: { success: true, message: "Email queued for sending" }
+  - Behavior: Sends email notification (e.g., order confirmation); logs to audit.
+
+- POST /api/webhooks/payment
+  - Input: { orderId: string, provider: string, providerReference: string, status: "PAID" | "SUCCESS" }
+  - Output: { success: true, status: "PAID" }
+  - Behavior: Receives payment webhook from payment provider (Stripe, PayPal, etc.); auto-confirms payment.
