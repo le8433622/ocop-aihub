@@ -8,9 +8,13 @@ generator client {
 }
 
 model User {
-  id    String @id @default(uuid())
-  email String @unique
-  name  String?
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  isActive     Boolean  @default(true)
   // relations would be added later (roles, profiles, etc.)
 }
 
@@ -28,7 +32,18 @@ model UserRole {
 }
 
 model Product {
-  id    String  @id @default(uuid())
-  name  String
-  price Float
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  model     String
+  modelId   String?
+  timestamp DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
 }
