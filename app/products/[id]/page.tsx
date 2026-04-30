@@ -2,6 +2,8 @@ import prisma from '../../../lib/prisma'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
   const product = await prisma.product.findUnique({
     where: { id: params.id },

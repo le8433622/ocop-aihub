@@ -2,6 +2,8 @@ import prisma from '../../lib/prisma'
 import Link from 'next/link'
 import { ProductCard } from '../../lib/components/ProductCard'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminDashboard() {
   const stats = {
     suppliers: await prisma.supplier.count(),
@@ -90,9 +92,9 @@ export default async function AdminDashboard() {
                 
                 <div className="space-y-6">
                    <div className="p-6 rounded-2xl bg-zinc-950 text-white font-mono text-sm border border-zinc-800">
-                      <p className="text-emerald-400 mb-2">// Active Provider</p>
+                      <p className="text-emerald-400 mb-2">{`// Active Provider`}</p>
                       <p>NVIDIA_NIM</p>
-                      <p className="text-emerald-400 mt-4 mb-2">// Current Model</p>
+                      <p className="text-emerald-400 mt-4 mb-2">{`// Current Model`}</p>
                       <p className="text-xs text-zinc-400">llama-3.1-nemotron-70b</p>
                    </div>
                    

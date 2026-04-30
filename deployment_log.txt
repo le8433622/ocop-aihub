@@ -1,0 +1,50 @@
+Retrieving project…
+Deploying le8433622-9187s-projects/ocop-aihub
+Uploading [--------------------] (0.0B/68B)
+Uploading [====================] (68.0B/68B)
+Inspect: https://vercel.com/le8433622-9187s-projects/ocop-aihub/44M8NBgPEAQqfCLiUCT8ym4STMCF [3s]
+Production: https://ocop-aihub-k4nebvzo6-le8433622-9187s-projects.vercel.app [3s]
+https://ocop-aihub-k4nebvzo6-le8433622-9187s-projects.vercel.appBuilding...
+Building...
+Building: Running build in Washington, D.C., USA (East) – iad1
+Building: Build machine configuration: 2 cores, 8 GB
+Building: Retrieving list of deployment files...
+Building: Downloading 105 deployment files...
+Building: Restored build cache from previous deployment (F37ZnHck8U2CcHKAhF7jiLv3o5Ab)
+Building: Running "vercel build"
+Building: Vercel CLI 51.6.1
+Building: Installing dependencies...
+Building: > ocop-aihub-prod-skeleton@0.1.0 prepare
+Building: > echo 'prepare script disabled'
+Building: prepare script disabled
+Building: added 1 package in 934ms
+Building: 156 packages are looking for funding
+Building: run `npm fund` for details
+Building: Detected Next.js version: 14.2.21
+Building: Running "npm run build"
+Building: > ocop-aihub-prod-skeleton@0.1.0 build
+Building: > next build
+Building: ▲ Next.js 14.2.21
+Building: - Environments: .env
+Building: Creating an optimized production build ...
+Building: ✓ Compiled successfully
+Building: Linting and checking validity of types ...
+Building: Failed to compile.
+Building: ./app/admin/page.tsx
+Building: 93:60  Error: Comments inside children section of tag should be placed inside braces  react/jsx-no-comment-textnodes
+Building: 95:65  Error: Comments inside children section of tag should be placed inside braces  react/jsx-no-comment-textnodes
+Building: ./app/page.tsx
+Building: 39:58  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+Building: 97:17  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+Building: 97:81  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+Building: ./app/reseller/page.tsx
+Building: 20:71  Error: Comments inside children section of tag should be placed inside braces  react/jsx-no-comment-textnodes
+Building: 20:105  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+Building: 20:119  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+Building: 61:78  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+Building: 61:151  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+Building: 61:168  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+Building: 61:181  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+Building: info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+Building: Error: Command "npm run build" exited with 1
+Error: Command "npm run build" exited with 1

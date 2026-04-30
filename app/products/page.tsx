@@ -2,6 +2,8 @@ import prisma from '../../lib/prisma'
 import { ProductCard } from '../../lib/components/ProductCard'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({
     where: { approvalStatus: 'APPROVED' },

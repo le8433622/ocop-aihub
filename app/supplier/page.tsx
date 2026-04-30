@@ -1,6 +1,8 @@
 import prisma from '../../lib/prisma'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 export default async function SupplierDashboard() {
   return (
     <div className="min-h-screen pt-32 pb-24 bg-zinc-50 dark:bg-zinc-950">

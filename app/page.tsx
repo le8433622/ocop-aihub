@@ -36,7 +36,7 @@ export default function Home() {
               Modern <span className="text-emerald-400">Elegance</span>.
             </h1>
             <p className="text-xl md:text-2xl text-zinc-300 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-              Discover curated OCOP products from Vietnam's finest producers, 
+              Discover curated OCOP products from Vietnam&apos;s finest producers, 
               verified by AI, and delivered with premium quality.
             </p>
             <div className="flex flex-col md:flex-row gap-4 justify-center">
@@ -94,7 +94,7 @@ export default function Home() {
                 and occasion.
               </p>
               <div className="p-4 bg-white/50 dark:bg-black/50 rounded-xl border border-white/20 mb-8 font-mono text-sm text-emerald-700">
-                "Hi! I need a gift set for a tea lover who likes floral notes..."
+                &quot;Hi! I need a gift set for a tea lover who likes floral notes...&quot;
               </div>
               <button className="btn-primary w-full md:w-auto">Talk to AI Assistant</button>
             </div>

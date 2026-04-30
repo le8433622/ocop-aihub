@@ -17,7 +17,7 @@ export default function ResellerDashboard() {
             <section className="glass p-10 rounded-[2.5rem]">
                <h3 className="text-2xl mb-8 font-bold">Marketing <span className="text-purple-600">Assistant</span></h3>
                <div className="p-8 rounded-3xl bg-zinc-950 border border-zinc-800 text-white">
-                  <p className="text-zinc-400 mb-6 font-mono text-sm">// Generate social media post for "Premium Honey"</p>
+                  <p className="text-zinc-400 mb-6 font-mono text-sm">{`// Generate social media post for "Premium Honey"`}</p>
                   <div className="space-y-4 mb-8">
                      <div className="h-4 bg-zinc-800 rounded-full w-3/4 animate-pulse"></div>
                      <div className="h-4 bg-zinc-800 rounded-full w-full animate-pulse"></div>
@@ -58,7 +58,7 @@ export default function ResellerDashboard() {
 
              <div className="glass p-8 rounded-3xl border-purple-500/10">
                 <h4 className="font-bold mb-4 text-purple-600 uppercase text-xs tracking-widest">AI Insights</h4>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">"Honey and Dried Fruits are trending in your region. Consider creating a 'Healthy Mornings' gift combo."</p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">&quot;Honey and Dried Fruits are trending in your region. Consider creating a &apos;Healthy Mornings&apos; gift combo.&quot;</p>
                 <button className="text-xs font-bold uppercase tracking-widest text-purple-600 underline">Create Combo &rarr;</button>
              </div>
           </aside>
