@@ -3,11 +3,25 @@ import { createServerSupabaseClient, getBearerUser } from '../../../lib/supabase
 
 export async function GET(req: Request) {
   const supabase = createServerSupabaseClient()
-  const { data, error } = await supabase
+  const { searchParams } = new URL(req.url)
+  const search = searchParams.get('q')
+  const minPrice = searchParams.get('minPrice')
+  const maxPrice = searchParams.get('maxPrice')
+  const stars = searchParams.get('stars')
+
+  let query = supabase
     .from('products')
     .select('*')
     .eq('approval_status', 'APPROVED')
-    .order('created_at', { ascending: false })
+
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
+  }
+  if (minPrice) query = query.gte('price', Number(minPrice))
+  if (maxPrice) query = query.lte('price', Number(maxPrice))
+  if (stars) query = query.eq('ocop_stars', Number(stars))
+
+  const { data, error } = await query.order('created_at', { ascending: false })
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   return NextResponse.json({ products: data })
 }

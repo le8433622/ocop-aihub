@@ -1,17 +1,29 @@
-import prisma from '../../lib/prisma'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { ProductCard } from '../../lib/components/ProductCard'
-import Link from 'next/link'
 
-export const dynamic = 'force-dynamic'
+export default function ProductsPage() {
+  const [products, setProducts] = useState<any[]>([])
+  const [search, setSearch] = useState('')
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
+  const [stars, setStars] = useState('')
 
-export default async function ProductsPage() {
-  const products = await prisma.product.findMany({
-    where: { approvalStatus: 'APPROVED' },
-    orderBy: { updatedAt: 'desc' }
-  })
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (search) params.set('q', search)
+    if (minPrice) params.set('minPrice', minPrice)
+    if (maxPrice) params.set('maxPrice', maxPrice)
+    if (stars) params.set('stars', stars)
+
+    fetch(`/api/products?${params.toString()}`)
+      .then(r => r.json())
+      .then(d => setProducts(d.products ?? []))
+  }, [search, minPrice, maxPrice, stars])
 
   return (
-    <div className="min-h-screen pt-32 pb-24 bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen pt-32 pb-24 bg-zinc-50">
       <div className="max-w-7xl mx-auto px-6">
         <header className="mb-16">
           <h1 className="text-5xl mb-4">Exquisite <span className="text-emerald-700">Catalog</span></h1>
@@ -22,27 +34,48 @@ export default async function ProductsPage() {
           {/* Sidebar Filters */}
           <aside className="space-y-10">
             <div>
-              <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400 mb-6">Categories</h4>
-              <ul className="space-y-3 font-medium">
-                <li className="text-emerald-700">All Products</li>
-                <li className="hover:text-emerald-700 transition-colors cursor-pointer">Tea & Coffee</li>
-                <li className="hover:text-emerald-700 transition-colors cursor-pointer">Honey & Spices</li>
-                <li className="hover:text-emerald-700 transition-colors cursor-pointer">Handicrafts</li>
-              </ul>
+              <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400 mb-6">Search</h4>
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+              />
             </div>
-            
+
             <div>
-              <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400 mb-6">OCOP Rating</h4>
+              <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400 mb-6">Price Range</h4>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={e => setMinPrice(e.target.value)}
+                  className="w-full rounded-lg border px-3 py-2 text-sm"
+                />
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={e => setMaxPrice(e.target.value)}
+                  className="w-full rounded-lg border px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400 mb-6">OCOP Stars</h4>
               <ul className="space-y-3 font-medium">
-                <li className="flex items-center gap-2 hover:text-amber-500 cursor-pointer">
-                  <span className="text-amber-400">★★★★★</span> 5 Stars
-                </li>
-                <li className="flex items-center gap-2 hover:text-amber-500 cursor-pointer">
-                  <span className="text-amber-400">★★★★</span> 4 Stars
-                </li>
-                <li className="flex items-center gap-2 hover:text-amber-500 cursor-pointer">
-                  <span className="text-amber-400">★★★</span> 3 Stars
-                </li>
+                {[5, 4, 3].map(s => (
+                  <li
+                    key={s}
+                    onClick={() => setStars(stars === String(s) ? '' : String(s))}
+                    className={`flex items-center gap-2 cursor-pointer hover:text-amber-500 ${stars === String(s) ? 'text-amber-500' : ''}`}
+                  >
+                    <span className="text-amber-400">{'★'.repeat(s)}{'☆'.repeat(5-s)}</span> {s} Stars
+                  </li>
+                ))}
               </ul>
             </div>
           </aside>
@@ -50,7 +83,7 @@ export default async function ProductsPage() {
           {/* Product Grid */}
           <div className="md:col-span-3">
             {products.length === 0 ? (
-              <div className="glass p-20 text-center rounded-3xl">
+              <div className="p-20 text-center rounded-3xl border">
                 <h3 className="text-2xl mb-4">No products found</h3>
                 <p className="text-zinc-500">Try adjusting your filters or check back later.</p>
               </div>
