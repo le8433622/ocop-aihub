@@ -1,66 +1,59 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { createServerSupabaseClient } from '../../lib/supabase'
 
-export default async function RegisterPage({
-  searchParams,
-}: {
-  searchParams: { message?: string }
-}) {
-  const signUp = async (formData: FormData) => {
-    'use server'
-    const supabase = createServerSupabaseClient()
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    if (error) {
-      return redirect('/register?message=Registration failed')
-    }
-    return redirect('/login?message=Check your email to confirm registration')
-  }
-
+export default function RegisterPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center text-gray-800">Register</h1>
-        {searchParams.message && (
-          <p className="mt-4 text-red-600 text-center">{searchParams.message}</p>
-        )}
-        <form action={signUp} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-          >
-            Sign Up
-          </button>
-        </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account? <Link href="/login" className="text-green-600 hover:underline">Sign In</Link>
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full">
+         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[120px]"></div>
+         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-500/10 rounded-full blur-[120px]"></div>
       </div>
-    </main>
+
+      <div className="relative z-10 w-full max-w-2xl px-6">
+        <div className="glass p-12 rounded-[3rem] border-white/20 shadow-2xl">
+          <header className="text-center mb-10">
+            <Link href="/" className="text-3xl font-black gradient-text inline-block mb-4">OCOP AIHub</Link>
+            <h1 className="text-2xl font-bold">Create Your Account</h1>
+            <p className="text-zinc-500 text-sm mt-2">Select your role and join the Vietnamese local specialties ecosystem.</p>
+          </header>
+
+          <form className="space-y-6">
+            <div className="grid grid-cols-3 gap-4 mb-10">
+               {['Customer', 'Supplier', 'Reseller'].map((role) => (
+                 <label key={role} className="cursor-pointer group">
+                    <input type="radio" name="role" value={role.toLowerCase()} className="hidden peer" defaultChecked={role === 'Customer'} />
+                    <div className="p-4 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all text-center">
+                       <span className="block font-bold text-sm">{role}</span>
+                    </div>
+                 </label>
+               ))}
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+               <div className="space-y-2">
+                 <label className="text-xs font-black uppercase tracking-widest text-zinc-400 ml-4">Full Name</label>
+                 <input type="text" placeholder="John Doe" className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+               </div>
+               <div className="space-y-2">
+                 <label className="text-xs font-black uppercase tracking-widest text-zinc-400 ml-4">Email Address</label>
+                 <input type="email" placeholder="name@example.com" className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+               </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-zinc-400 ml-4">Password</label>
+              <input type="password" placeholder="••••••••" className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+            </div>
+
+            <button type="submit" className="btn-primary w-full py-4 text-lg">Create Account</button>
+          </form>
+
+          <div className="mt-10 text-center">
+             <p className="text-sm text-zinc-500">
+                Already have an account? <Link href="/login" className="text-emerald-700 font-bold hover:underline">Sign In</Link>
+             </p>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

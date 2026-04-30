@@ -1,63 +1,50 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { createServerSupabaseClient } from '../../lib/supabase'
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: { message?: string }
-}) {
-  const signIn = async (formData: FormData) => {
-    'use server'
-    const supabase = createServerSupabaseClient()
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      return redirect('/login?message=Invalid credentials')
-    }
-    return redirect('/admin')
-  }
-
+export default function LoginPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center text-gray-800">Login</h1>
-        {searchParams.message && (
-          <p className="mt-4 text-red-600 text-center">{searchParams.message}</p>
-        )}
-        <form action={signIn} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-          >
-            Sign In
-          </button>
-        </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Need an account? <Link href="/register" className="text-green-600 hover:underline">Register</Link>
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-full">
+         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[120px]"></div>
+         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-500/10 rounded-full blur-[120px]"></div>
       </div>
-    </main>
+
+      <div className="relative z-10 w-full max-w-lg px-6">
+        <div className="glass p-12 rounded-[3rem] border-white/20 shadow-2xl">
+          <header className="text-center mb-10">
+            <Link href="/" className="text-3xl font-black gradient-text inline-block mb-4">OCOP AIHub</Link>
+            <h1 className="text-2xl font-bold">Welcome Back</h1>
+            <p className="text-zinc-500 text-sm mt-2">Sign in to manage your OCOP heritage journey.</p>
+          </header>
+
+          <form className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-zinc-400 ml-4">Email Address</label>
+              <input type="email" placeholder="name@example.com" className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center px-4">
+                <label className="text-xs font-black uppercase tracking-widest text-zinc-400">Password</label>
+                <Link href="#" className="text-xs font-bold text-emerald-700 hover:underline">Forgot?</Link>
+              </div>
+              <input type="password" placeholder="••••••••" className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+            </div>
+
+            <button type="submit" className="btn-primary w-full py-4 text-lg">Sign In</button>
+          </form>
+
+          <div className="mt-10 text-center">
+             <p className="text-sm text-zinc-500">
+                New to the platform? <Link href="/register" className="text-emerald-700 font-bold hover:underline">Create an account</Link>
+             </p>
+          </div>
+        </div>
+        
+        <div className="mt-8 text-center text-xs text-zinc-400 font-medium uppercase tracking-widest">
+           Secure Infrastructure by NVIDIA NIM & Supabase
+        </div>
+      </div>
+    </div>
   )
 }
