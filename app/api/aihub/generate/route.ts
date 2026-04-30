@@ -5,15 +5,15 @@ import { AiTaskRunner } from '../../../../lib/ai/core/AiTaskRunner'
 
 export async function POST(req: Request) {
   const user = await getBearerUser(req)
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-  }
+  // Auth is optional for public chatbot, but required for specific tasks if needed
+  // For MVP, we allow anonymous but log with null userId
 
   try {
     const body = await req.json()
-    const { taskType = 'generic', model, prompt } = body
+    const { taskType = 'generic', model, prompt, input } = body
+    const finalPrompt = prompt || input?.prompt
 
-    if (!prompt || typeof prompt !== 'string') {
+    if (!finalPrompt || typeof finalPrompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400 })
     }
 
@@ -23,10 +23,10 @@ export async function POST(req: Request) {
     const result = await runner.run(
       {
         model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: finalPrompt }],
       },
       {
-        userId: user.id,
+        userId: user?.id,
         taskType,
         model,
       }

@@ -37,8 +37,8 @@ export default function AiChatWidget() {
 
       const data = await res.json()
       
-      if (data.success && data.data?.output) {
-        setMessages(prev => [...prev, { role: 'ai', text: data.data.output }])
+      if (res.ok && data.response) {
+        setMessages(prev => [...prev, { role: 'ai', text: data.response }])
       } else {
         setMessages(prev => [...prev, { role: 'ai', text: 'Rất tiếc, tôi đang gặp khó khăn khi kết nối. Vui lòng thử lại sau.' }])
       }
