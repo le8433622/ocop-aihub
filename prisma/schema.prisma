@@ -70,15 +70,18 @@ model Product {
 }
 
 model Order {
-  id          String      @id @default(uuid())
-  userId      String?     @map("user_id")
-  user        User?       @relation(fields: [userId], references: [id])
-  status      String      @default("UNPAID")
-  totalAmount Float       @map("total_amount")
-  items       OrderItem[]
-  payments    Payment[]
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  id            String      @id @default(uuid())
+  userId        String?     @map("user_id")
+  user          User?       @relation(fields: [userId], references: [id])
+  status        String      @default("UNPAID")
+  totalAmount   Float       @map("total_amount")
+  shippingName  String?     @map("shipping_name")
+  shippingPhone String?     @map("shipping_phone")
+  shippingAddr  String?     @map("shipping_addr")
+  items         OrderItem[]
+  payments      Payment[]
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
 
   @@map("orders")
 }

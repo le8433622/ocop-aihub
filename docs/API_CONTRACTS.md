@@ -37,3 +37,30 @@
   - Output: { checkout: { orderId, status, paymentStatus, totalAmount } }
   - Behavior: Runs inside database transaction; product must be APPROVED; stock is checked and decremented; order, order_items, payment, and audit log are created.
   - Errors: 400 Bad Request, 401 Unauthorized, 409 Insufficient stock
+
+- POST /api/orders/[id]/confirm-payment
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Input: { provider: string, providerReference: string }
+  - Output: { result: { orderId, status, paymentStatus } }
+  - Behavior: Confirms payment for UNPAID order; updates payment to PAID; updates order to PAID; writes audit log.
+  - Errors: 401 Unauthorized, 404 Order not found, 400 Invalid order status, 409 Payment already processed
+
+- PATCH /api/orders/[id]/shipping
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Input: { shippingName: string, shippingPhone: string, shippingAddr: string }
+  - Output: { result: { orderId, shippingName } }
+  - Behavior: Updates order shipping information; only order owner can update; writes audit log.
+  - Errors: 401 Unauthorized, 404 Order not found, 403 Forbidden
+
+- PATCH /api/orders/[id]/status
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Input: { status: string } (valid: PAID, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUND_REVIEW, REFUNDED)
+  - Output: { result: { orderId, status } }
+  - Behavior: Updates order status; writes audit log with old and new status.
+  - Errors: 401 Unauthorized, 404 Order not found, 400 Invalid status
+
+- GET /api/admin/orders
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Query: ?status=PAID&userId=xxx
+  - Output: { orders: [...] }
+  - Behavior: Admin view of all orders with user, payment, and item details; supports filtering by status and userId.
