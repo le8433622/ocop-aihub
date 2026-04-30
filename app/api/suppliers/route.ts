@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getUserIdFromRequest } from '../../../../lib/auth'
 import { Pool } from 'pg'
+require('dotenv').config()
 
 const pool = new Pool({
   host: '127.0.0.1',

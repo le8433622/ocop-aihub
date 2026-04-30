@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { generateToken } from '../../../../lib/auth'
 import { Pool } from 'pg'
+require('dotenv').config()
 
 const pool = new Pool({
   host: '127.0.0.1',
