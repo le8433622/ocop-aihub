@@ -1,0 +1,30 @@
+Retrieving project…
+Deploying le8433622-9187s-projects/ocop-aihub
+Inspect: https://vercel.com/le8433622-9187s-projects/ocop-aihub/FoL3cWciN8jfdviVFzzY5rfoxom8 [2s]
+Production: https://ocop-aihub-dg41acp3d-le8433622-9187s-projects.vercel.app [2s]
+https://ocop-aihub-dg41acp3d-le8433622-9187s-projects.vercel.appBuilding...
+Building...
+Building: Running build in Washington, D.C., USA (East) – iad1
+Building: Build machine configuration: 2 cores, 8 GB
+Building: Retrieving list of deployment files...
+Building: Downloading 106 deployment files...
+Building: Restored build cache from previous deployment (F37ZnHck8U2CcHKAhF7jiLv3o5Ab)
+Building: Running "vercel build"
+Building: Vercel CLI 51.6.1
+Building: Installing dependencies...
+Building: > ocop-aihub-prod-skeleton@0.1.0 prepare
+Building: > echo 'prepare script disabled'
+Building: prepare script disabled
+Building: added 1 package in 1s
+Building: 156 packages are looking for funding
+Building: run `npm fund` for details
+Building: Detected Next.js version: 14.2.21
+Building: Running "npm run build"
+Building: > ocop-aihub-prod-skeleton@0.1.0 build
+Building: > next build
+Building: ▲ Next.js 14.2.21
+Building: - Environments: .env
+Building: Creating an optimized production build ...
+Building: ✓ Compiled successfully
+Building: Linting and checking validity of types ...
+Error: Command "npm run build" exited with 1
