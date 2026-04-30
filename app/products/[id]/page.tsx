@@ -44,9 +44,21 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
           <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
           <p className="mt-4 text-2xl text-green-700 font-bold">${product.price}</p>
           <p className="mt-6 text-gray-600">{product.description}</p>
-          <button className="mt-8 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
-            Add to Cart (Demo)
-          </button>
+          <form action="/checkout" className="mt-8">
+            <input type="hidden" name="productId" value={product.id} />
+            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+            <input
+              id="quantity"
+              name="quantity"
+              type="number"
+              min="1"
+              defaultValue="1"
+              className="mt-1 w-24 rounded-lg border border-gray-300 px-3 py-2"
+            />
+            <button className="ml-3 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+              Start Checkout
+            </button>
+          </form>
         </div>
       </div>
     </main>

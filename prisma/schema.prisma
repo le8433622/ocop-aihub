@@ -76,10 +76,25 @@ model Order {
   status      String      @default("UNPAID")
   totalAmount Float       @map("total_amount")
   items       OrderItem[]
+  payments    Payment[]
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
   @@map("orders")
+}
+
+model Payment {
+  id                String   @id @default(uuid())
+  orderId           String   @map("order_id")
+  order             Order    @relation(fields: [orderId], references: [id])
+  status            String   @default("PENDING_PAYMENT")
+  provider          String?
+  providerReference String?  @map("provider_reference")
+  amount            Float
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("payments")
 }
 
 model OrderItem {

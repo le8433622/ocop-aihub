@@ -30,3 +30,10 @@
   - Output: { ok: true, response: string }
   - Behavior: Requires AI provider configuration, creates AiGeneration lifecycle log, blocks unsafe prompts.
   - Errors: 400 Bad Request, 401 Unauthorized, 503 AI provider is not configured
+
+- POST /api/checkout
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Input: { items: [ { productId: string, quantity: number } ] }
+  - Output: { checkout: { orderId, status, paymentStatus, totalAmount } }
+  - Behavior: Runs inside database transaction; product must be APPROVED; stock is checked and decremented; order, order_items, payment, and audit log are created.
+  - Errors: 400 Bad Request, 401 Unauthorized, 409 Insufficient stock
