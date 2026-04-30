@@ -6,6 +6,7 @@ import Link from 'next/link'
 export const metadata = {
   title: 'OCOP AIHub',
   description: 'White-Label Commerce Platform for OCOP Products',
+  manifest: '/manifest.json',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

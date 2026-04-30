@@ -34,6 +34,7 @@ export default function Navbar() {
     { href: '/cart', label: 'Cart' },
     { href: '/my/wishlist', label: 'Wishlist' },
     { href: '/track', label: 'Track' },
+    { href: '/contact', label: 'Contact' },
     { href: '/supplier', label: 'Supplier' },
     { href: '/reseller', label: 'Reseller' },
     { href: '/admin', label: 'Admin' },
