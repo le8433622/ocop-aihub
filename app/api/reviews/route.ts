@@ -8,20 +8,29 @@ export async function GET(req: Request) {
   const supabase = createServerSupabaseClient()
   let query = supabase
     .from('reviews')
-    .select(`
-      id,
-      rating,
-      comment,
-      created_at,
-      user:user_id ( name )
-    `)
+    .select('*')
     .order('created_at', { ascending: false })
 
   if (productId) query = query.eq('product_id', productId)
 
-  const { data, error } = await query
+  const { data: reviews, error } = await query
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
-  return NextResponse.json({ reviews: data ?? [] })
+
+  if (reviews && reviews.length > 0) {
+    const userIds = [...new Set(reviews.map(r => r.user_id).filter(Boolean))]
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, name')
+      .in('id', userIds)
+
+    const userMap = new Map(users?.map(u => [u.id, { name: u.name }]) ?? [])
+    reviews.forEach((r: any) => {
+      r.user = userMap.get(r.user_id) ?? null
+      delete r.user_id
+    })
+  }
+
+  return NextResponse.json({ reviews: reviews ?? [] })
 }
 
 export async function POST(req: Request) {
