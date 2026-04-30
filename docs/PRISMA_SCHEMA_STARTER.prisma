@@ -1,0 +1,400 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  SUPPLIER
+  RESELLER
+  CUSTOMER
+}
+
+enum SupplierStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum StorefrontStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  READY_TO_SHIP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ShipmentStatus {
+  NOT_CREATED
+  CREATED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+enum AiTaskType {
+  PRODUCT_DESCRIPTION
+  SEO_CONTENT
+  GIFT_COMBO
+  MARKETING_POST
+  PRODUCT_VALIDATION
+  STOREFRONT_CHAT
+  ENGINEERING_INSIGHT
+  CODEX_BRIEF
+}
+
+enum AiTaskStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum AiContentStatus {
+  DRAFT
+  REVIEW_REQUIRED
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+enum EngineeringInsightStatus {
+  OPEN
+  TRIAGED
+  SENT_TO_CODEX
+  IN_PROGRESS
+  PR_CREATED
+  MERGED
+  REJECTED
+  CLOSED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  name         String?
+  phone        String?
+  role         UserRole @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  supplierProfile Supplier?
+  resellerProfile Reseller?
+  customerOrders  Order[] @relation("CustomerOrders")
+  auditLogs       AuditLog[]
+}
+
+model Supplier {
+  id           String         @id @default(cuid())
+  userId       String         @unique
+  user         User           @relation(fields: [userId], references: [id])
+  businessName String
+  taxCode      String?
+  address      String
+  province     String?
+  district     String?
+  ward         String?
+  contactName  String
+  contactPhone String
+  status       SupplierStatus @default(PENDING)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  products     Product[]
+  certificates OcopCertificate[]
+  orderItems   OrderItem[]
+}
+
+model OcopCertificate {
+  id            String   @id @default(cuid())
+  supplierId    String
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  productName   String
+  starRating    Int
+  certificateNo String
+  issuedBy      String?
+  issuedAt      DateTime?
+  expiresAt     DateTime?
+  documentUrl   String?
+  isVerified    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  supplierId     String
+  supplier       Supplier      @relation(fields: [supplierId], references: [id])
+  name           String
+  slug           String        @unique
+  description    String
+  story          String?
+  originProvince String?
+  category       String?
+  ocopStars      Int?
+  basePrice      Int
+  suggestedPrice Int
+  inventory      Int           @default(0)
+  weightGram     Int?
+  lengthCm       Int?
+  widthCm        Int?
+  heightCm       Int?
+  shelfLife      String?
+  ingredients    String?
+  status         ProductStatus @default(DRAFT)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  images          ProductImage[]
+  storefrontItems StorefrontProduct[]
+  orderItems      OrderItem[]
+  aiProfile       ProductAiProfile?
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Reseller {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  displayName    String
+  commissionRate Decimal  @default(0.10)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  storefronts Storefront[]
+}
+
+model Storefront {
+  id           String           @id @default(cuid())
+  resellerId   String
+  reseller     Reseller         @relation(fields: [resellerId], references: [id])
+  name         String
+  slug         String           @unique
+  customDomain String?          @unique
+  logoUrl      String?
+  primaryColor String           @default("#166534")
+  status       StorefrontStatus @default(DRAFT)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  products StorefrontProduct[]
+  orders   Order[]
+}
+
+model StorefrontProduct {
+  id           String     @id @default(cuid())
+  storefrontId String
+  storefront   Storefront @relation(fields: [storefrontId], references: [id])
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id])
+  sellPrice    Int
+  isVisible    Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([storefrontId, productId])
+}
+
+model Order {
+  id               String         @id @default(cuid())
+  orderCode        String         @unique
+  storefrontId     String
+  storefront       Storefront     @relation(fields: [storefrontId], references: [id])
+  customerId       String?
+  customer         User?          @relation("CustomerOrders", fields: [customerId], references: [id])
+  customerName     String
+  customerPhone    String
+  customerEmail    String?
+  shippingAddress  String
+  shippingProvince String?
+  shippingDistrict String?
+  shippingWard     String?
+  subtotal         Int
+  shippingFee      Int            @default(0)
+  total            Int
+  resellerProfit   Int            @default(0)
+  platformFee      Int            @default(0)
+  status           OrderStatus    @default(PENDING_PAYMENT)
+  paymentStatus    PaymentStatus  @default(UNPAID)
+  shipmentStatus   ShipmentStatus @default(NOT_CREATED)
+  trackingCode     String?
+  carrier          String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  items       OrderItem[]
+  payments    Payment[]
+  commissions Commission[]
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  quantity   Int
+  unitPrice  Int
+  basePrice  Int
+  total      Int
+  createdAt  DateTime @default(now())
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String
+  order         Order         @relation(fields: [orderId], references: [id])
+  provider      String
+  providerTxnId String?
+  amount        Int
+  status        PaymentStatus @default(UNPAID)
+  rawPayload    Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Commission {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  resellerId String
+  amount     Int
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ProductAiProfile {
+  id               String   @id @default(cuid())
+  productId        String   @unique
+  product          Product  @relation(fields: [productId], references: [id])
+  shortDescription String?
+  longDescription  String?
+  seoTitle         String?
+  seoDescription   String?
+  sellingPoints    Json?
+  targetCustomers  Json?
+  suggestedCombos  Json?
+  warnings         Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model AiGeneration {
+  id           String       @id @default(cuid())
+  taskType     AiTaskType
+  status       AiTaskStatus @default(PENDING)
+  userId       String?
+  productId    String?
+  storefrontId String?
+  input        Json
+  output       Json?
+  errorMessage String?
+  provider     String       @default("NVIDIA_NIM")
+  model        String
+  promptTokens Int?
+  outputTokens Int?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model AiContentDraft {
+  id           String          @id @default(cuid())
+  generationId String
+  productId    String?
+  storefrontId String?
+  title        String?
+  body         String
+  contentType  String
+  status       AiContentStatus @default(DRAFT)
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  publishedAt  DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model AiUsageDaily {
+  id         String   @id @default(cuid())
+  userId     String?
+  ipHash     String?
+  taskType   String
+  date       String
+  count      Int      @default(0)
+  tokenTotal Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, ipHash, taskType, date])
+}
+
+model EngineeringInsight {
+  id             String                   @id @default(cuid())
+  title          String
+  description    String
+  source         String
+  severity       String
+  status         EngineeringInsightStatus @default(OPEN)
+  evidence       Json
+  suggestedFix   Json?
+  codexBrief     String?
+  githubIssueUrl String?
+  pullRequestUrl String?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
