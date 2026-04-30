@@ -1,12 +1,5 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { generateToken } from '../../../../lib/auth'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://usfbpktesdbriomlrzqn.supabase.co',
-  process.env.SUPABASE_ANON_KEY || 'b093552cf73a8b3591ff73d5c8260eea41d5b6922db6559a5f902aff12adae06'
-)
+import { createServerSupabaseClient } from '../../../../lib/supabase'
 
 type Body = {
   email: string
@@ -15,22 +8,24 @@ type Body = {
 
 export async function POST(req: Request) {
   try {
+    const supabase = createServerSupabaseClient()
     const body: Body = await req.json()
-    // Try to find user in Supabase
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, name, password_hash')
-      .eq('email', body.email)
-      .single()
-    if (error || !data) {
+    if (!body.email || !body.password) {
+      return new Response(JSON.stringify({ error: 'Email and password are required' }), { status: 400 })
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: body.email,
+      password: body.password,
+    })
+    if (error || !data.user) {
       return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 })
     }
-    const ok = await bcrypt.compare(body.password, data.password_hash)
-    if (!ok) {
-      return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 })
-    }
-    const token = generateToken(data.id)
-    return NextResponse.json({ token, user: { id: data.id, email: data.email, name: data.name } })
+    const token = data.session?.access_token ?? ''
+    const user = data.user
+    return NextResponse.json({
+      token,
+      user: { id: user.id, email: user.email, name: user.user_metadata?.name ?? '' },
+    })
   } catch (e: any) {
     console.error(e)
     return new Response(JSON.stringify({ error: 'Server error', detail: e.message }), { status: 500 })

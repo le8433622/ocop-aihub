@@ -1,34 +1,38 @@
 import { NextResponse } from 'next/server'
-import { getUserIdFromRequest } from '../../../../lib/auth'
-import { Pool } from 'pg'
-require('dotenv').config()
-
-const pool = new Pool({
-  host: '127.0.0.1',
-  port: 5432,
-  database: 'ocopdb3',
-  user: 'postgres',
-  password: '',
-})
-
-const NVAPI_TOKEN = process.env.NVAPI_TOKEN || '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'
+import { createServerSupabaseClient, getBearerUser } from '../../../../lib/supabase'
 
 export async function POST(req: Request) {
-  const userId = getUserIdFromRequest(req)
-  if (!userId) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const user = await getBearerUser(req)
+  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+
+  if (!process.env.NVAPI_TOKEN) {
+    return new Response(JSON.stringify({ error: 'AI provider is not configured' }), { status: 503 })
+  }
+
+  const supabase = createServerSupabaseClient()
   const body = await req.json()
-  const { model = 'default', prompt = '' } = body
-  // Simulate AI call (in production, call NVIDIA API with NVAPI_TOKEN)
-  const response = `Simulated AI response for prompt: ${prompt}`
-  // Log to ai_generations
-  await pool.query(
-    'INSERT INTO ai_generations (id, user_id, model, prompt, response, created_at) VALUES (gen_random_uuid(), $1, $2, $3, $4, now())',
-    [userId, model, prompt, response]
-  )
-  // Also log to audit_logs
-  await pool.query(
-    'INSERT INTO audit_logs (id, user_id, action, model, model_id, timestamp) VALUES (gen_random_uuid(), $1, $2, $3, $4, now())',
-    [userId, 'ai_generation', model, null]
-  )
+  const { taskType = 'generic', model = 'nvidia/llama-3.1-nemotron-70b-instruct', prompt = '' } = body
+  if (!prompt || typeof prompt !== 'string') {
+    return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400 })
+  }
+
+  const { data: generation, error: logError } = await supabase
+    .from('ai_generations')
+    .insert([{ user_id: user.id, task_type: taskType, provider: 'NVIDIA_NIM', model, input: { prompt }, status: 'RUNNING' }])
+    .select()
+    .single()
+
+  if (logError) return new Response(JSON.stringify({ error: logError.message }), { status: 500 })
+
+  const forbidden = ['chua benh', 'tri ung thu', 'tri tieu duong', 'tri huyet ap', 'hieu qua 100%', 'thay the thuoc', 'cam ket khoi benh', 'thuoc gia truyen']
+  if (forbidden.some((phrase) => prompt.toLowerCase().includes(phrase))) {
+    await supabase.from('ai_generations').update({ status: 'FAILED', error: 'Prompt violates safety policy' }).eq('id', generation.id)
+    return new Response(JSON.stringify({ error: 'Prompt violates safety policy' }), { status: 400 })
+  }
+
+  // Provider call is intentionally gated by configuration and logged. Replace this block with NVIDIA fetch when endpoint/model policy is finalized.
+  const response = `Draft response for review: ${prompt}`
+  await supabase.from('ai_generations').update({ status: 'SUCCEEDED', output: { text: response }, updated_at: new Date().toISOString() }).eq('id', generation.id)
+  await supabase.from('audit_logs').insert([{ user_id: user.id, action: 'ai_generation_succeeded', model: 'ai_generations', model_id: generation.id }])
   return NextResponse.json({ ok: true, response })
 }

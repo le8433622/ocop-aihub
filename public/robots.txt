@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ocop-aihub.vercel.app/sitemap.xml
