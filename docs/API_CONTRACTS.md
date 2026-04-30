@@ -91,3 +91,26 @@
   - Input: { orderId: string, provider: string, providerReference: string, status: "PAID" | "SUCCESS" }
   - Output: { success: true, status: "PAID" }
   - Behavior: Receives payment webhook from payment provider (Stripe, PayPal, etc.); auto-confirms payment.
+
+- POST /api/upload/image
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Input: multipart/form-data with file and productId
+  - Output: { url: string }
+  - Behavior: Uploads product image to Supabase Storage; updates product.image_url.
+
+- POST /api/email/send
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Input: { to: string, template: string, data: object }
+  - Output: { success: true, result: object }
+  - Behavior: Sends email via Resend API; templates: order_confirmed, order_shipped, order_delivered, review_received. Requires RESEND_API_KEY env.
+
+- POST /api/payments/stripe
+  - Headers: Authorization: Bearer <Supabase access token>
+  - Input: { orderId: string, amount: number }
+  - Output: { url: string, sessionId: string }
+  - Behavior: Creates Stripe checkout session; requires STRIPE_SECRET_KEY env. Use webhook to confirm payment.
+
+- POST /api/webhooks/stripe
+  - Input: Stripe webhook payload with signature verification
+  - Output: { received: true }
+  - Behavior: Handles Stripe checkout.session.completed; confirms payment via RPC.
