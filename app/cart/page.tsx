@@ -1,39 +1,104 @@
-import Link from 'next/link'
+'use client'
+
+import { useState, useEffect } from 'react'
+
+interface CartItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+}
 
 export default function CartPage() {
+  const [items, setItems] = useState<CartItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('cart')
+    if (saved) {
+      try {
+        setItems(JSON.parse(saved))
+      } catch {}
+    }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(items))
+  }, [items])
+
+  const updateQty = (id: string, qty: number) => {
+    if (qty <= 0) {
+      setItems(prev => prev.filter(i => i.id !== id))
+    } else {
+      setItems(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i))
+    }
+  }
+
+  const remove = (id: string) => {
+    setItems(prev => prev.filter(i => i.id !== id))
+  }
+
+  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+
+  const checkout = async () => {
+    const cartItems = items.map(item => ({ productId: item.id, quantity: item.quantity }))
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: cartItems })
+    })
+    const data = await res.json()
+    if (data.checkout) {
+      setItems([])
+      localStorage.removeItem('cart')
+      alert(`Order created: ${data.checkout.orderId}`)
+    } else {
+      alert(data.error || 'Checkout failed')
+    }
+  }
+
+  if (loading) return <div className="p-8 text-center">Loading...</div>
+
   return (
-    <div className="min-h-screen pt-32 pb-24 bg-zinc-50 dark:bg-zinc-950">
-      <div className="max-w-4xl mx-auto px-6">
-        <h1 className="text-4xl mb-12">Your <span className="text-emerald-700">Selection</span></h1>
+    <main className="max-w-4xl mx-auto py-16 px-4">
+      <h1 className="text-3xl font-bold text-gray-800">Shopping Cart</h1>
 
-        <div className="grid gap-8">
-          {/* Cart Item Placeholder */}
-          <div className="glass p-6 rounded-3xl flex gap-6 items-center">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-100 to-amber-100 flex-shrink-0"></div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold">Premium OCOP Tea</h3>
-              <p className="text-zinc-500 text-sm">5 Stars Certification</p>
+      {items.length === 0 ? (
+        <p className="mt-8 text-gray-500">Your cart is empty.</p>
+      ) : (
+        <div className="mt-8 space-y-4">
+          {items.map(item => (
+            <div key={item.id} className="rounded-xl border bg-white p-6 shadow-sm flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">{item.name}</h3>
+                <p className="text-sm text-gray-500">{item.price.toLocaleString()}₫ each</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => updateQty(item.id, item.quantity - 1)} className="w-8 h-8 rounded border">-</button>
+                  <span className="w-8 text-center">{item.quantity}</span>
+                  <button onClick={() => updateQty(item.id, item.quantity + 1)} className="w-8 h-8 rounded border">+</button>
+                </div>
+                <p className="w-24 text-right font-semibold">{(item.price * item.quantity).toLocaleString()}₫</p>
+                <button onClick={() => remove(item.id)} className="text-red-500 text-sm">Remove</button>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-               <span className="font-black text-xl">$45.00</span>
-               <div className="w-24 h-10 bg-white/50 dark:bg-black/50 rounded-full flex items-center justify-around px-2 border border-zinc-200 dark:border-zinc-800">
-                  <button className="font-bold">-</button>
-                  <span className="font-bold">1</span>
-                  <button className="font-bold">+</button>
-               </div>
-               <button className="text-destructive font-bold ml-4">✕</button>
-            </div>
+          ))}
+
+          <div className="rounded-xl border bg-white p-6 shadow-sm flex justify-between items-center">
+            <span className="text-lg font-semibold">Total</span>
+            <span className="text-2xl font-bold">{total.toLocaleString()}₫</span>
           </div>
 
-          <div className="mt-12 border-t border-zinc-200 dark:border-zinc-800 pt-8 flex justify-between items-end">
-            <div>
-              <p className="text-zinc-500 mb-1">Subtotal</p>
-              <p className="text-4xl font-black">$45.00</p>
-            </div>
-            <Link href="/checkout" className="btn-primary px-12 py-4 text-lg">Proceed to Checkout</Link>
-          </div>
+          <button
+            onClick={checkout}
+            className="w-full rounded-lg bg-indigo-600 py-3 text-lg font-semibold text-white hover:bg-indigo-700"
+          >
+            Proceed to Checkout
+          </button>
         </div>
-      </div>
-    </div>
+      )}
+    </main>
   )
 }
