@@ -1,6 +1,9 @@
 name: 🤖 Autonomous AIHub
 
 on:
+  push:
+    branches:
+      - main
   repository_dispatch:
     types: [execute_task]
   issues:
