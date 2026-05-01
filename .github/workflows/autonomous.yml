@@ -38,7 +38,7 @@ jobs:
       - name: Install Opencode
         run: |
           curl -fsSL https://opencode.ai/install | bash
-          echo "/home/runner/.opencode/bin" >> $GITHUB_PATH
+          export PATH="$PATH:/home/runner/.opencode/bin"
           opencode --version
 
       - name: Get Task
