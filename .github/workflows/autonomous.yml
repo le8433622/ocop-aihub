@@ -5,6 +5,8 @@ on:
     types: [execute_task]
   issues:
     types: [opened, labeled]
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       task:
@@ -35,13 +37,30 @@ jobs:
           npm install -g opencode
           opencode --version
 
+      - name: Get Task
+        id: task
+        run: |
+          if [[ "${{ github.event.inputs.task }}" != "" ]]; then
+            echo "task=${{ github.event.inputs.task }}" >> $GITHUB_OUTPUT
+            echo "source=workflow_dispatch" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.client_payload.task }}" != "" ]]; then
+            echo "task=${{ github.event.client_payload.task }}" >> $GITHUB_OUTPUT
+            echo "source=repository_dispatch" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.issue.title }}" =~ ^Auto\ Task:\ (.+)$ ]]; then
+            echo "task=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+            echo "source=issue" >> $GITHUB_OUTPUT
+          else
+            echo "task=Check for labeled issues" >> $GITHUB_OUTPUT
+            echo "source=schedule" >> $GITHUB_OUTPUT
+          fi
+
       - name: Execute Task
         id: execute
         run: |
-          TASK="${{ github.event.client_payload.task || github.event.inputs.task }}"
-          echo "Executing: $TASK"
+          echo "Task from: ${{ steps.task.outputs.source }}"
+          echo "Executing: ${{ steps.task.outputs.task }}"
           
-          RESULT=$(opencode "$TASK" 2>&1 || echo "EXECUTION_COMPLETED")
+          RESULT=$(opencode "${{ steps.task.outputs.task }}" 2>&1 || echo "EXECUTION_COMPLETED")
           echo "result=$RESULT" >> $GITHUB_OUTPUT
           
           echo "✅ Opencode execution completed"
@@ -54,7 +73,7 @@ jobs:
             git config user.name "AIHub Bot"
             git config user.email "aihub@ocop.ai"
             
-            TASK="${{ github.event.client_payload.task || github.event.inputs.task }}"
+            TASK="${{ steps.task.outputs.task }}"
             git add -A
             git commit -m "[AIHub] $TASK" || echo "No changes to commit"
             
@@ -73,9 +92,8 @@ jobs:
         if: steps.commit.outputs.branch != ''
         run: |
           BRANCH="${{ steps.commit.outputs.branch }}"
-          TASK="${{ github.event.client_payload.task || github.event.inputs.task }}"
+          TASK="${{ steps.task.outputs.task }}"
           
-          # Use gh CLI
           gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
           
           PR_URL=$(gh pr create \
@@ -92,8 +110,14 @@ $TASK
           echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
           echo "✅ PR created: $PR_URL"
 
+      - name: Remove trigger label
+        if: github.event.issue && contains(github.event.issue.labels.*.name, 'trigger')
+        run: |
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/trigger -X DELETE
+
       - name: Report Status
         run: |
           echo "## 🎉 Autonomous Execution Complete"
+          echo "- Source: ${{ steps.task.outputs.source }}"
           echo "- Branch: ${{ steps.commit.outputs.branch }}"
           echo "- PR: ${{ steps.commit.outputs.pr_url }}"
