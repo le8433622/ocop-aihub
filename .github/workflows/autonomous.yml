@@ -37,24 +37,10 @@ jobs:
 
       - name: Install Opencode
         run: |
-          echo "Installing Opencode..."
-          PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')
-          ARCH=$(uname -m)
-          [ "$ARCH" = "arm64" ] && ARCH="arm64" || ARCH="x64"
-          LATEST=$(curl -sL https://api.github.com/repos/anomalyco/opencode/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-          echo "Latest: $LATEST, Platform: $PLATFORM, Arch: $ARCH"
-          FILENAME="opencode-${PLATFORM}-${ARCH}"
-          URL="https://github.com/anomalyco/opencode/releases/download/${LATEST}/${FILENAME}"
-          echo "Downloading from: $URL"
-          mkdir -p "$HOME/.opencode/bin"
-          if curl -fSL "$URL" -o "$HOME/.opencode/bin/opencode"; then
-            chmod +x "$HOME/.opencode/bin/opencode"
-            echo "$HOME/.opencode/bin" >> $GITHUB_PATH
-            "$HOME/.opencode/bin/opencode" --version
-          else
-            echo "Failed to download Opencode"
-            exit 1
-          fi
+          echo "Testing curl..."
+          curl --version | head -1
+          echo "Getting release info..."
+          curl -sL "https://api.github.com/repos/anomalyco/opencode/releases/latest" | head -20
 
       - name: Get Task
         id: task
