@@ -1,0 +1,14 @@
+{
+  "name": "vercel-plugin-opencode",
+  "version": "1.0.0",
+  "description": "Vercel Build Plugin to install Opencode CLI",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build:ts && npm run build:js",
+    "build:ts": "tsc",
+    "build:js": "node build.js"
+  },
+  "keywords": ["vercel", "vercel-plugin", "opencode", "ai"],
+  "author": "OCOP AIHub",
+  "license": "MIT"
+}
