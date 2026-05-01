@@ -17,6 +17,11 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   execute:
     runs-on: ubuntu-latest
@@ -87,12 +92,14 @@ jobs:
         id: commit
         if: steps.task.outputs.task != ''
         run: |
+          rm -f issues.json
           git config user.name "AIHub Bot"
           git config user.email "aihub@ocop.ai"
+          git checkout -b "autonomous/$(date +%s)"
           git add -A
           git diff --cached --stat || echo "No changes"
           git commit -m "[AIHub] ${{ steps.task.outputs.task }}" || echo "No commit needed"
-          git push origin main || echo "Push failed or no changes"
+          git push -u origin HEAD || echo "Push failed"
 
       - name: Report
         run: |
