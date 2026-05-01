@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient, getBearerUser } from '../../../../lib/supabase'
+import { createServerSupabaseClient, requireSupplier } from '../../../../lib/supabase'
 
 export async function GET(req: Request) {
-  const user = await getBearerUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const auth = await requireSupplier(req)
+  if (auth instanceof Response) return auth
+  const { user } = auth
 
   const supabase = createServerSupabaseClient()
 

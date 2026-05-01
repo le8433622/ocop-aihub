@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient, getBearerUser } from '../../../../lib/supabase'
+import { createServerSupabaseClient, getBearerUser, getUserRole } from '../../../../lib/supabase'
 
 export async function GET(req: Request) {
   const user = await getBearerUser(req)
@@ -13,7 +13,9 @@ export async function GET(req: Request) {
     .single()
 
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
-  return NextResponse.json({ user: data })
+
+  const role = await getUserRole(supabase, user.id)
+  return NextResponse.json({ user: { ...data, role } })
 }
 
 export async function PATCH(req: Request) {

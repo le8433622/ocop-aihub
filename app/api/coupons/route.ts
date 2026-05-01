@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '../../../lib/supabase'
+import { createServerSupabaseClient, requireAdmin } from '../../../lib/supabase'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -38,6 +38,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireAdmin(req)
+  if (auth instanceof Response) return auth
+
   const body = await req.json()
   const { code, discountPercent, discountAmount, maxUses, validUntil } = body
 

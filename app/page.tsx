@@ -4,19 +4,6 @@ import Link from 'next/link'
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 glass border-b border-white/10 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black gradient-text">OCOP AIHub</Link>
-          <div className="hidden md:flex gap-8 items-center text-sm font-semibold uppercase tracking-widest">
-            <Link href="/products" className="hover:text-amber-500 transition-colors">Catalog</Link>
-            <Link href="/reseller" className="hover:text-amber-500 transition-colors">Storefronts</Link>
-            <Link href="/admin" className="hover:text-amber-500 transition-colors">Admin</Link>
-            <Link href="/login" className="btn-primary py-2 px-6">Sign In</Link>
-          </div>
-        </div>
-      </nav>
-
       <main>
         {/* Hero Section */}
         <section className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
@@ -96,7 +83,12 @@ export default function Home() {
               <div className="p-4 bg-white/50 dark:bg-black/50 rounded-xl border border-white/20 mb-8 font-mono text-sm text-emerald-700">
                 &quot;Hi! I need a gift set for a tea lover who likes floral notes...&quot;
               </div>
-              <button className="btn-primary w-full md:w-auto">Talk to AI Assistant</button>
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-ai-chat'))}
+                className="btn-primary w-full md:w-auto"
+              >
+                Talk to AI Assistant
+              </button>
             </div>
             <div className="relative">
                <div className="absolute -top-20 -left-20 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl"></div>
@@ -108,31 +100,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <footer className="py-20 bg-emerald-950 text-white">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12">
-          <div className="col-span-2">
-            <h2 className="text-3xl font-black text-amber-400 mb-6">OCOP AIHub</h2>
-            <p className="text-zinc-400 max-w-md">The premier platform for Vietnamese OCOP products, connecting local producers with the world through technology and trust.</p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-6 text-zinc-100">Platform</h4>
-            <ul className="space-y-4 text-zinc-400">
-              <li><Link href="/products">All Products</Link></li>
-              <li><Link href="/reseller">Storefronts</Link></li>
-              <li><Link href="/supplier">Suppliers</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold mb-6 text-zinc-100">Company</h4>
-            <ul className="space-y-4 text-zinc-400">
-              <li><Link href="/about">About Us</Link></li>
-              <li><Link href="/contact">Contact</Link></li>
-              <li><Link href="/privacy">Privacy Policy</Link></li>
-            </ul>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

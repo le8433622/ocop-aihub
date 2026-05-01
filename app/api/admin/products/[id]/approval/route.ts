@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient, getBearerUser } from '../../../../../../lib/supabase'
+import { createServerSupabaseClient, requireAdmin } from '../../../../../../lib/supabase'
 
 const allowedStatuses = new Set(['APPROVED', 'REJECTED', 'ARCHIVED'])
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const user = await getBearerUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const auth = await requireAdmin(req)
+  if (auth instanceof Response) return auth
+  const { user } = auth
 
   const body = await req.json()
   if (!allowedStatuses.has(body.status)) {

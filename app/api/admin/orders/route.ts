@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '../../../../lib/supabase'
+import { createServerSupabaseClient, requireAdmin } from '../../../../lib/supabase'
 
 export async function GET(req: Request) {
+  const auth = await requireAdmin(req)
+  if (auth instanceof Response) return auth
+
   const supabase = createServerSupabaseClient()
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')

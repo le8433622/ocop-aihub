@@ -17,6 +17,12 @@ export default function AiChatWidget() {
     }
   }, [messages])
 
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true)
+    window.addEventListener('open-ai-chat', handleOpen)
+    return () => window.removeEventListener('open-ai-chat', handleOpen)
+  }, [])
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
@@ -51,7 +57,7 @@ export default function AiChatWidget() {
 
   return (
     <div className="fixed bottom-8 right-8 z-[100] font-sans">
-      {/* Chat Window */}
+      {/* ... existing chat window ... */}
       {isOpen && (
         <div className="absolute bottom-20 right-0 w-[380px] h-[550px] bg-white dark:bg-zinc-950 rounded-[2.5rem] shadow-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
@@ -122,7 +128,7 @@ export default function AiChatWidget() {
         onClick={() => setIsOpen(!isOpen)}
         className="w-16 h-16 bg-emerald-900 text-white rounded-full shadow-2xl shadow-emerald-900/40 flex items-center justify-center hover:scale-110 transition-all duration-300 group relative border border-emerald-500/20"
       >
-        <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-20 group-hover:opacity-40"></div>
+        <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-20 group-hover:opacity-40 pointer-events-none"></div>
         {isOpen ? (
           <svg className="w-8 h-8 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         ) : (
