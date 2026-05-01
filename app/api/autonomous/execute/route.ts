@@ -1,21 +1,17 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '../../../../lib/supabase'
-import { exec } from 'child_process'
-import { promisify } from 'util'
 
-const execAsync = promisify(exec)
-
-async function triggerGitHubActions(task: string, taskId: string): Promise<{ success: boolean; runUrl?: string; output: string }> {
+async function triggerViaIssue(task: string, taskId: string): Promise<{ success: boolean; issueUrl?: string; output: string }> {
   const token = process.env.GITHUB_TOKEN
-  const repo = process.env.GITHUB_REPO || 'ocop-aihub/ocop-aihub'
+  const repo = process.env.GITHUB_REPO || 'le8433622/ocop-aihub'
   
   if (!token) {
     return { success: false, output: 'GITHUB_TOKEN not configured' }
   }
 
   try {
-    // Trigger repository dispatch event
-    const url = `https://api.github.com/repos/${repo}/dispatches`
+    // Create issue with trigger label
+    const url = `https://api.github.com/repos/${repo}/issues`
     
     const response = await fetch(url, {
       method: 'POST',
@@ -26,19 +22,18 @@ async function triggerGitHubActions(task: string, taskId: string): Promise<{ suc
         'X-GitHub-Api-Version': '2022-11-28'
       },
       body: JSON.stringify({
-        event_type: 'execute_task',
-        client_payload: {
-          task,
-          taskId
-        }
+        title: `Auto Task: ${task.substring(0, 50)}`,
+        body: `${task}\n\n---\nTask ID: ${taskId}\nCreated by: AIHub API`,
+        labels: ['trigger']
       })
     })
 
     if (response.ok) {
+      const issue = await response.json()
       return { 
         success: true, 
-        runUrl: `https://github.com/${repo}/actions`,
-        output: `GitHub Actions workflow triggered for: ${task}` 
+        issueUrl: issue.html_url,
+        output: `Created trigger issue: ${issue.html_url}` 
       }
     } else {
       const error = await response.text()
@@ -49,15 +44,116 @@ async function triggerGitHubActions(task: string, taskId: string): Promise<{ suc
   }
 }
 
-async function runLocalOpencode(task: string): Promise<{ success: boolean; output: string }> {
+async function triggerViaPush(task: string, taskId: string): Promise<{ success: boolean; output: string }> {
+  const token = process.env.GITHUB_TOKEN
+  const repo = process.env.GITHUB_REPO || 'le8433622/ocop-aihub'
+  
+  if (!token) {
+    return { success: false, output: 'GITHUB_TOKEN not configured' }
+  }
+
   try {
-    const { stdout, stderr } = await execAsync(
-      `npx -y opencode@latest "${task}"`,
-      { timeout: 300000 }
-    )
-    return { success: true, output: stdout || stderr }
-  } catch (e: any) {
-    return { success: false, output: e.message }
+    // Get current commit SHA
+    const refRes = await fetch(`https://api.github.com/repos/${repo}/git/ref/heads/main`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json'
+      }
+    })
+    const refData = await refRes.json()
+    const commitSha = refData.object.sha
+
+    // Create a new file with task info to trigger workflow
+    const triggerFile = `.aihub/triggers/${taskId}.json`
+    const content = JSON.stringify({
+      task,
+      taskId,
+      created: new Date().toISOString()
+    }, null, 2)
+    const encodedContent = Buffer.from(content).toString('base64')
+
+    // Create blob
+    const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        content: encodedContent,
+        encoding: 'base64'
+      })
+    })
+    const blob = await blobRes.json()
+
+    // Get tree
+    const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${commitSha}?recursive=1`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json'
+      }
+    })
+    const treeData = await treeRes.json()
+
+    // Create new tree
+    const newTreeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        base_tree: commitSha,
+        tree: [
+          {
+            path: triggerFile,
+            mode: '100644',
+            type: 'blob',
+            sha: blob.sha
+          }
+        ]
+      })
+    })
+    const newTree = await newTreeRes.json()
+
+    // Create commit
+    const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `[AIHub] Trigger task: ${task.substring(0, 30)}...`,
+        tree: newTree.sha,
+        parents: [commitSha]
+      })
+    })
+    const commit = await commitRes.json()
+
+    // Update ref
+    await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/main`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sha: commit.sha,
+        force: true
+      })
+    })
+
+    return { 
+      success: true, 
+      output: `Triggered workflow via push: ${triggerFile}` 
+    }
+  } catch (error: any) {
+    return { success: false, output: error.message }
   }
 }
 
@@ -92,18 +188,18 @@ export async function POST(req: Request) {
 
     console.log(`[Execute] Processing: ${task.description}`)
 
-    // Try GitHub Actions first (primary method)
-    const githubResult = await triggerGitHubActions(task.description, taskId)
+    // Try pushing a trigger file first (most reliable)
+    const pushResult = await triggerViaPush(task.description, taskId)
     
-    // If GitHub Actions failed, try local (fallback)
-    let result = githubResult
-    if (!githubResult.success) {
-      console.log('[Execute] GitHub Actions failed, trying local opencode...')
-      const localResult = await runLocalOpencode(task.description)
+    // If push failed, try creating an issue
+    let result = pushResult
+    if (!pushResult.success) {
+      console.log('[Execute] Push failed, trying issue method...')
+      const issueResult = await triggerViaIssue(task.description, taskId)
       result = {
-        success: localResult.success,
-        output: localResult.output,
-        runUrl: undefined
+        success: issueResult.success,
+        output: issueResult.output,
+        runUrl: issueResult.issueUrl
       }
     }
 
@@ -112,8 +208,8 @@ export async function POST(req: Request) {
       .update({ 
         status: result.success ? 'reviewing' : 'failed',
         testresults: { 
-          github: githubResult.success ? 'triggered' : 'failed',
-          local: result.success 
+          push: pushResult.success ? 'triggered' : 'failed',
+          issue: result.success 
         },
         updatedat: new Date().toISOString()
       })
@@ -121,7 +217,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: result.success ? 'Task execution started' : 'Execution failed',
+      message: result.success ? 'Task execution triggered' : 'Execution failed',
       output: result.output,
       runUrl: result.runUrl,
       taskId 

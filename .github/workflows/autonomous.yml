@@ -53,7 +53,20 @@ jobs:
         run: |
           echo "Event: ${{ github.event_name }}"
           
-          if [[ "${{ github.event.inputs.task }}" != "" ]]; then
+          # Check for trigger files first
+          if ls .aihub/triggers/*.json 1> /dev/null 2>&1; then
+            echo "Found trigger files..."
+            TRIGGER_FILE=$(ls -t .aihub/triggers/*.json | head -1)
+            if [[ -n "$TRIGGER_FILE" ]]; then
+              TASK=$(cat "$TRIGGER_FILE" | jq -r '.task // empty')
+              TASK_ID=$(cat "$TRIGGER_FILE" | jq -r '.taskId // empty')
+              echo "task=$TASK" >> $GITHUB_OUTPUT
+              echo "source=api_trigger"
+              echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
+              rm -f "$TRIGGER_FILE"
+              echo "Using trigger file: $TRIGGER_FILE"
+            fi
+          elif [[ "${{ github.event.inputs.task }}" != "" ]]; then
             echo "task=${{ github.event.inputs.task }}" >> $GITHUB_OUTPUT
             echo "source=workflow_dispatch"
           elif [[ "${{ github.event.client_payload.task }}" != "" ]]; then
