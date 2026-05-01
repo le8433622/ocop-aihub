@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient, getBearerUser } from '../../../lib/supabase'
+import { createServerSupabaseClient, requireCustomerOrReseller } from '../../../lib/supabase'
 
 export async function GET(req: Request) {
-  const user = await getBearerUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const auth = await requireCustomerOrReseller(req)
+  if (auth instanceof Response) return auth
+  const { user, role } = auth
 
   const supabase = createServerSupabaseClient()
   const { data, error } = await supabase.from('orders').select('*').eq('user_id', user.id)
@@ -12,8 +13,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await getBearerUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const auth = await requireCustomerOrReseller(req)
+  if (auth instanceof Response) return auth
+  const { user } = auth
 
   const supabase = createServerSupabaseClient()
   const body = await req.json()

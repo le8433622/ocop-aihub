@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createRequestSupabaseClient, getBearerUser } from '../../../lib/supabase'
+import { createRequestSupabaseClient, requireCustomerOrReseller } from '../../../lib/supabase'
 
 type CheckoutItem = {
   productId: string
@@ -7,8 +7,9 @@ type CheckoutItem = {
 }
 
 export async function POST(req: Request) {
-  const user = await getBearerUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const auth = await requireCustomerOrReseller(req)
+  if (auth instanceof Response) return auth
+  const { user } = auth
 
   const body = await req.json()
   const items = body.items as CheckoutItem[] | undefined

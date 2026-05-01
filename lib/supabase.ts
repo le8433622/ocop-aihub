@@ -81,3 +81,19 @@ export async function requireSupplier(req: Request) {
   }
   return result
 }
+
+export async function requireCustomerOrReseller(req: Request) {
+  const result = await requireRole(req, ['ADMIN', 'RESELLER', 'CUSTOMER'])
+  if (!result) {
+    return new Response(JSON.stringify({ error: 'Customer or Reseller access required' }), { status: 403 })
+  }
+  return result
+}
+
+export async function requireCustomer(req: Request) {
+  const result = await requireRole(req, ['ADMIN', 'CUSTOMER'])
+  if (!result) {
+    return new Response(JSON.stringify({ error: 'Customer access required' }), { status: 403 })
+  }
+  return result
+}

@@ -7,6 +7,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   const supabase = createRequestSupabaseClient(req)
 
+  // Check role for admin bypass
+  const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', user.id).single()
+  const isAdmin = profile?.role === 'ADMIN'
+
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .select('status, user_id')
@@ -17,7 +21,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404 })
   }
 
-  if (order.user_id !== user.id) {
+  // ADMIN can cancel any order, others must own it
+  if (!isAdmin && order.user_id !== user.id) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
   }
 

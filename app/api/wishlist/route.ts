@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient, getBearerUser } from '../../../lib/supabase'
+import { createServerSupabaseClient, requireCustomer } from '../../../lib/supabase'
 
 export async function GET(req: Request) {
-  const user = await getBearerUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const auth = await requireCustomer(req)
+  if (auth instanceof Response) return auth
+  const { user } = auth
 
   const supabase = createServerSupabaseClient()
   const { data, error } = await supabase
@@ -16,8 +17,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await getBearerUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const auth = await requireCustomer(req)
+  if (auth instanceof Response) return auth
+  const { user } = auth
 
   const { productId } = await req.json()
   if (!productId) return new Response(JSON.stringify({ error: 'productId required' }), { status: 400 })
@@ -34,8 +36,9 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const user = await getBearerUser(req)
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+  const auth = await requireCustomer(req)
+  if (auth instanceof Response) return auth
+  const { user } = auth
 
   const { searchParams } = new URL(req.url)
   const productId = searchParams.get('productId')
