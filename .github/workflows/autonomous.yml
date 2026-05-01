@@ -37,7 +37,8 @@ jobs:
 
       - name: Install Opencode
         run: |
-          npm install -g opencode
+          curl -fsSL https://opencode.ai/install | bash
+          source ~/.bashrc
           opencode --version
 
       - name: Get Task
