@@ -148,7 +148,7 @@ export default function AutonomousDashboard() {
       } else if (lowerInput.startsWith('status ') || lowerInput.startsWith('trạng thái ')) {
         // Get specific task status
         const taskId = userInput.match(/[a-f0-9]{8,}/i)?.[0]
-        const task = tasks.find(t => t.id.includes(taskId))
+        const task = taskId ? tasks.find(t => t.id.includes(taskId)) : null
         if (task) {
           setMessages(prev => [...prev, { 
             role: 'ai', 
