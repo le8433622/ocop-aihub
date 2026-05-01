@@ -36,7 +36,22 @@ jobs:
         run: npm install
 
       - name: Install Opencode
-        run: npm install -g opencode
+        run: |
+          npm install -g opencode || true
+          if ! command -v opencode &> /dev/null; then
+            echo "Trying direct download..."
+            PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')
+            ARCH=$(uname -m)
+            [ "$ARCH" = "arm64" ] && ARCH="arm64" || ARCH="x64"
+            LATEST=$(curl -sL https://api.github.com/repos/anomalyco/opencode/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+            FILENAME="opencode-${PLATFORM}-${ARCH}"
+            URL="https://github.com/anomalyco/opencode/releases/download/${LATEST}/${FILENAME}"
+            mkdir -p "$HOME/.opencode/bin"
+            curl -fSL "$URL" -o "$HOME/.opencode/bin/opencode"
+            chmod +x "$HOME/.opencode/bin/opencode"
+            echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          fi
+          opencode --version || echo "Opencode not available"
 
       - name: Get Task
         id: task
