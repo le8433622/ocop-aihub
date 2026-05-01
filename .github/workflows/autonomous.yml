@@ -3,6 +3,8 @@ name: 🤖 Autonomous AIHub
 on:
   repository_dispatch:
     types: [execute_task]
+  issues:
+    types: [labeled]
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
