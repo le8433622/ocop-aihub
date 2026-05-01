@@ -3,8 +3,6 @@ name: 🤖 Autonomous AIHub
 on:
   repository_dispatch:
     types: [execute_task]
-  issues:
-    types: [opened, labeled]
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
@@ -39,22 +37,37 @@ jobs:
 
       - name: Get Task
         id: task
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ github.event.inputs.task }}" != "" ]]; then
             echo "task=${{ github.event.inputs.task }}" >> $GITHUB_OUTPUT
             echo "source=workflow_dispatch" >> $GITHUB_OUTPUT
+            exit 0
           elif [[ "${{ github.event.client_payload.task }}" != "" ]]; then
             echo "task=${{ github.event.client_payload.task }}" >> $GITHUB_OUTPUT
             echo "source=repository_dispatch" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.issue.title }}" =~ ^Auto\ Task:\ (.+)$ ]]; then
-            echo "task=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-            echo "source=issue" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "Checking for issues with trigger label..."
+          ISSUES=$(gh api repos/${{ github.repository }}/issues -F state=open -F per_page=10 --jq '.[] | select(.labels[] | .name == "trigger") | {number, title}')
+          
+          if [[ "$ISSUES" == "[]" || -z "$ISSUES" ]]; then
+            echo "No trigger-labeled issues found"
+            echo "task=" >> $GITHUB_OUTPUT
+            echo "source=none" >> $GITHUB_OUTPUT
           else
-            echo "task=Check for labeled issues" >> $GITHUB_OUTPUT
-            echo "source=schedule" >> $GITHUB_OUTPUT
+            ISSUE_NUM=$(echo "$ISSUES" | head -1 | jq -r '.number')
+            ISSUE_TITLE=$(echo "$ISSUES" | head -1 | jq -r '.title')
+            TASK="${ISSUE_TITLE#Auto Task: }"
+            echo "task=$TASK" >> $GITHUB_OUTPUT
+            echo "source=issue_$ISSUE_NUM" >> $GITHUB_OUTPUT
+            echo "issue_number=$ISSUE_NUM" >> $GITHUB_OUTPUT
           fi
 
       - name: Execute Task
+        if: steps.task.outputs.task != ''
         id: execute
         run: |
           echo "Task from: ${{ steps.task.outputs.source }}"
@@ -67,6 +80,7 @@ jobs:
           echo "$RESULT"
 
       - name: Commit and Push
+        if: steps.task.outputs.task != ''
         id: commit
         run: |
           if git diff --stat | grep -q .; then
@@ -79,7 +93,7 @@ jobs:
             
             BRANCH="autonomous/$(date +%s)"
             git checkout -b $BRANCH
-            git push -u origin $BRANCH
+            git push -u origin $BRANCH || echo "Push failed"
             
             echo "branch=$BRANCH" >> $GITHUB_OUTPUT
             echo "✅ Changes committed and pushed to $BRANCH"
@@ -111,9 +125,9 @@ $TASK
           echo "✅ PR created: $PR_URL"
 
       - name: Remove trigger label
-        if: github.event.issue && contains(github.event.issue.labels.*.name, 'trigger')
+        if: steps.task.outputs.issue_number
         run: |
-          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels/trigger -X DELETE
+          gh api repos/${{ github.repository }}/issues/${{ steps.task.outputs.issue_number }}/labels/trigger -X DELETE
 
       - name: Report Status
         run: |
