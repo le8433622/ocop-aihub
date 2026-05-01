@@ -3,6 +3,8 @@ name: 🤖 Autonomous AIHub
 on:
   repository_dispatch:
     types: [execute_task]
+  issues:
+    types: [opened]
   workflow_dispatch:
     inputs:
       task:
