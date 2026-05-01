@@ -3,16 +3,35 @@ import { createServerSupabaseClient } from '../../../../lib/supabase'
 
 async function createTriggerIssue(task: string, taskId: string): Promise<{ success: boolean; issueUrl?: string; output: string }> {
   const token = process.env.GITHUB_TOKEN
-  const repo = process.env.GITHUB_REPO || 'le8433622/ocop-aihub'
+  let repo = process.env.GITHUB_REPO
+  
+  // Fallback to default if not set
+  if (!repo) {
+    repo = 'le8433622/ocop-aihub'
+    console.log('[Execute] Using default repo')
+  }
   
   console.log('[Execute] GITHUB_TOKEN exists:', !!token)
   console.log('[Execute] Repo:', repo)
+  console.log('[Execute] Token prefix:', token?.substring(0, 20))
   
   if (!token) {
     return { success: false, output: 'GITHUB_TOKEN not configured in environment' }
   }
 
   try {
+    // First, verify the repo exists
+    const verifyUrl = `https://api.github.com/repos/${repo}`
+    const verifyRes = await fetch(verifyUrl, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    })
+    
+    if (!verifyRes.ok) {
+      const err = await verifyRes.text()
+      console.log('[Execute] Repo verify failed:', verifyRes.status, err)
+      return { success: false, output: `Cannot access repo: ${verifyRes.status}` }
+    }
+    
     const url = `https://api.github.com/repos/${repo}/issues`
     
     console.log('[Execute] Creating issue...')
