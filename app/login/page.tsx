@@ -1,6 +1,44 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to login')
+      }
+
+      // In a real app we'd save token to cookies, but currently Supabase handles session server-side mostly
+      // or we just redirect
+      router.push('/products')
+      router.refresh()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
       {/* Background Decor */}
@@ -17,10 +55,19 @@ export default function LoginPage() {
             <p className="text-zinc-500 text-sm mt-2">Sign in to manage your OCOP heritage journey.</p>
           </header>
 
-          <form className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6">
+            {error && <div className="p-4 bg-red-500/10 text-red-500 rounded-xl text-sm font-bold text-center border border-red-500/20">{error}</div>}
+            
             <div className="space-y-2">
               <label className="text-xs font-black uppercase tracking-widest text-zinc-400 ml-4">Email Address</label>
-              <input type="email" placeholder="name@example.com" className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="name@example.com" 
+                className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
+              />
             </div>
             
             <div className="space-y-2">
@@ -28,10 +75,19 @@ export default function LoginPage() {
                 <label className="text-xs font-black uppercase tracking-widest text-zinc-400">Password</label>
                 <Link href="#" className="text-xs font-bold text-emerald-700 hover:underline">Forgot?</Link>
               </div>
-              <input type="password" placeholder="••••••••" className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••" 
+                className="w-full h-14 px-8 rounded-2xl bg-white/50 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
+              />
             </div>
 
-            <button type="submit" className="btn-primary w-full py-4 text-lg">Sign In</button>
+            <button disabled={loading} type="submit" className="btn-primary w-full py-4 text-lg disabled:opacity-50">
+              {loading ? 'Signing In...' : 'Sign In'}
+            </button>
           </form>
 
           <div className="mt-10 text-center">

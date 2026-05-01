@@ -4,18 +4,18 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String     @id @default(uuid())
+  email        String     @unique
   name         String?
   passwordHash String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  isActive     Boolean  @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  isActive     Boolean    @default(true)
   userRoles    UserRole[]
   auditLogs    AuditLog[]
   suppliers    Supplier[]
@@ -23,8 +23,8 @@ model User {
 }
 
 model Role {
-  id       String    @id @default(uuid())
-  name     String    @unique
+  id        String     @id @default(uuid())
+  name      String     @unique
   userRoles UserRole[]
 }
 
@@ -33,6 +33,7 @@ model UserRole {
   roleId String
   user   User   @relation(fields: [userId], references: [id])
   role   Role   @relation(fields: [roleId], references: [id])
+
   @@id([userId, roleId])
 }
 
@@ -117,11 +118,11 @@ model Payment {
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  orderId   String   @map("order_id")
-  order     Order    @relation(fields: [orderId], references: [id])
-  productId String   @map("product_id")
-  product   Product  @relation(fields: [productId], references: [id])
+  id        String  @id @default(uuid())
+  orderId   String  @map("order_id")
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Float
 
@@ -155,4 +156,51 @@ model AiGeneration {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("ai_generations")
+}
+
+model AutonomousTask {
+  id String @id @default(uuid())
+
+  type        String @default("feature")
+  status      String @default("pending")
+  priority    Int    @default(5)
+  description String @db.Text
+
+  planningPrompt String? @map("planningprompt") @db.Text
+  subtasks       Json?
+  planningResult String? @map("planningresult") @db.Text
+
+  branch     String?
+  commitHash String? @map("commithash")
+  prUrl      String? @map("prurl")
+  prNumber   Int?   @map("prnumber")
+
+  testResults   Json?   @map("testresults")
+  reviewResults Json?   @map("reviewresults")
+  errorLog      String? @map("errorlog") @db.Text
+
+  createdAt   DateTime  @default(now()) @map("createdat")
+  updatedAt   DateTime  @updatedAt @map("updatedat")
+  completedAt DateTime? @map("completedat")
+
+  runs AutonomousRun[]
+
+  @@map("autonomous_tasks")
+}
+
+model AutonomousRun {
+  id     String         @id @default(uuid())
+  taskId String         @map("task_id")
+  task   AutonomousTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  step     String
+  status   String  @default("pending")
+  logs     String? @db.Text
+  output   String? @db.Text
+  duration Int?
+  error    String? @db.Text
+
+  createdAt DateTime @default(now()) @map("createdat")
+
+  @@map("autonomous_runs")
 }
